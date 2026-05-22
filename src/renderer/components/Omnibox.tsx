@@ -14,6 +14,7 @@ interface OmniboxProps {
   onStop: () => void;
   onSplitToggle?: () => void;
   isSplit?: boolean;
+  onSettingsToggle?: () => void;
 }
 
 function isUrl(text: string): boolean {
@@ -51,6 +52,7 @@ export default function Omnibox({
   onStop,
   onSplitToggle,
   isSplit,
+  onSettingsToggle,
 }: OmniboxProps) {
   const [inputValue, setInputValue] = React.useState(url);
   const [focused, setFocused] = React.useState(false);
@@ -183,6 +185,15 @@ export default function Omnibox({
       >
         {mode === 'classic' ? '⊞' : mode === 'compact' ? '⊟' : '⊡'}
       </button>
+      {onSettingsToggle && (
+        <button
+          onClick={onSettingsToggle}
+          style={{ ...navBtnStyle, opacity: 0.5, fontSize: 14 }}
+          title="Settings"
+        >
+          ⚙
+        </button>
+      )}
     </div>
   );
 }

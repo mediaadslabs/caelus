@@ -6,6 +6,8 @@ import BookmarksBar from './components/BookmarksBar';
 import StatusBar from './components/StatusBar';
 import VerticalTabs from './components/VerticalTabs';
 import SplitView from './components/SplitView';
+import NewTabPage from './components/NewTabPage';
+import Settings from './components/Settings';
 import WebViewTab from './components/WebViewTab';
 import { LayoutProvider, useLayout } from './context/LayoutContext';
 import { useQuickLinkCopy } from './hooks/useQuickLinkCopy';
@@ -52,6 +54,7 @@ function BrowserContent() {
   const [splitTabId, setSplitTabId] = useState<string | null>(null);
   const [lastActiveTabId, setLastActiveTabId] = useState<string | null>(null);
   const [splitRatio, setSplitRatio] = useState(0.5);
+  const [showSettings, setShowSettings] = useState(false);
   const webviewRefs = useRef<Map<string, WebViewHandle>>(new Map());
   const activeTab = tabs.find((t) => t.active) || tabs[0];
   const { mode } = useLayout();
@@ -154,7 +157,12 @@ function BrowserContent() {
   }, [toggleSplit]);
 
   const renderWebviewArea = () => {
-    const isSplit = splitTabId && splitTabId !== activeTab?.id;
+    if (showSettings) {
+      return <Settings onClose={() => setShowSettings(false)} />;
+    }
+
+    const isNewTab = !activeTab?.url || activeTab.url === 'about:blank';
+    const isSplit = splitTabId && splitTabId !== activeTab?.id && !isNewTab;
 
     if (isSplit && activeTab) {
       return (
@@ -178,6 +186,14 @@ function BrowserContent() {
 
     const hiddenTabIds = new Set<string>();
     if (splitTabId) hiddenTabIds.add(splitTabId);
+
+    if (isNewTab) {
+      return (
+        <div style={{ flex: 1, position: 'relative' }}>
+          <NewTabPage onNavigate={handleNavigate} />
+        </div>
+      );
+    }
 
     return (
       <>
@@ -216,6 +232,7 @@ function BrowserContent() {
       onStop={handleStop}
       onSplitToggle={toggleSplit}
       isSplit={!!(splitTabId && splitTabId !== activeTab?.id)}
+      onSettingsToggle={() => setShowSettings((v) => !v)}
     />
   );
 
