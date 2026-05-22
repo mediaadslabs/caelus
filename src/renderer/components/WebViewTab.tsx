@@ -33,7 +33,8 @@ export default function WebViewTab({
   onStatusUpdate,
 }: WebViewTabProps) {
   const webviewRef = useRef<Electron.WebviewTag | null>(null);
-  const [ready, setReady] = useState(false);
+  const [attached, setAttached] = useState(false);
+  const pendingUrlRef = useRef<string | null>(null);
 
   const setRef = useCallback((el: HTMLWebViewElement | null) => {
     if (el) {
@@ -41,16 +42,24 @@ export default function WebViewTab({
     }
   }, []);
 
+  const loadURL = useCallback((u: string) => {
+    const wv = webviewRef.current;
+    if (!wv || !attached) {
+      pendingUrlRef.current = u;
+      return;
+    }
+    if (u === 'about:blank') return;
+    wv.loadURL(u).catch((err: Error) => {
+      console.error('webview.loadURL error:', err.message);
+    });
+  }, [attached]);
+
   const handle: WebViewHandle = {
     goBack: () => webviewRef.current?.goBack(),
     goForward: () => webviewRef.current?.goForward(),
     reload: () => webviewRef.current?.reload(),
     stop: () => webviewRef.current?.stop(),
-    loadURL: (u: string) => {
-      if (webviewRef.current && u !== 'about:blank') {
-        webviewRef.current.loadURL(u);
-      }
-    },
+    loadURL,
   };
 
   handleRefMap.set(tabId, handle);
@@ -62,6 +71,14 @@ export default function WebViewTab({
       handleRefMap.delete(tabId);
     };
   }, [tabId]);
+
+  useEffect(() => {
+    if (attached && pendingUrlRef.current) {
+      const u = pendingUrlRef.current;
+      pendingUrlRef.current = null;
+      loadURL(u);
+    }
+  }, [attached, loadURL]);
 
   useEffect(() => {
     const wv = webviewRef.current;
@@ -80,6 +97,11 @@ export default function WebViewTab({
     const onUpdateTargetUrl = (e: Electron.UpdateTargetUrlEvent) => {
       onStatusUpdate?.(e.url);
     };
+    const onDidFailLoad = (e: Electron.DidFailLoadEvent) => {
+      if (e.errorCode !== -3) {
+        console.warn(`WebView[${tabId}] fail: ${e.errorDescription} (${e.errorCode}) for ${e.validatedURL}`);
+      }
+    };
 
     wv.addEventListener('did-navigate', onDidNavigate);
     wv.addEventListener('did-navigate-in-page', onDidNavigateInPage);
@@ -88,6 +110,7 @@ export default function WebViewTab({
     wv.addEventListener('did-stop-loading', onDidStopLoading);
     wv.addEventListener('page-favicon-updated', onPageFaviconUpdated);
     wv.addEventListener('update-target-url', onUpdateTargetUrl);
+    wv.addEventListener('did-fail-load', onDidFailLoad);
 
     return () => {
       wv.removeEventListener('did-navigate', onDidNavigate);
@@ -97,17 +120,9 @@ export default function WebViewTab({
       wv.removeEventListener('did-stop-loading', onDidStopLoading);
       wv.removeEventListener('page-favicon-updated', onPageFaviconUpdated);
       wv.removeEventListener('update-target-url', onUpdateTargetUrl);
+      wv.removeEventListener('did-fail-load', onDidFailLoad);
     };
   }, [tabId, onUrlChange, onTitleChange, onLoadingChange, onFaviconChange, onStatusUpdate]);
-
-  useEffect(() => {
-    if (!ready) return;
-    const wv = webviewRef.current;
-    if (!wv) return;
-    if (wv.getURL() !== url && url !== 'about:blank') {
-      wv.loadURL(url);
-    }
-  }, [url, ready]);
 
   return (
     <webview
@@ -116,11 +131,15 @@ export default function WebViewTab({
       style={{
         width: '100%',
         height: '100%',
-        display: active ? 'flex' : 'none',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: active ? 1 : 0,
+        visibility: active ? 'visible' : 'hidden',
       }}
-      onDid-attach={() => setReady(true)}
+      onDid-attach={() => setAttached(true)}
       allowpopups
-      webpreferences="contextIsolation=yes, nodeIntegration=no"
+      webpreferences="contextIsolation=yes, nodeIntegration=no, webSecurity=no"
     />
   );
 }

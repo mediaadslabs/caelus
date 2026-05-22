@@ -184,38 +184,30 @@ function BrowserContent() {
       );
     }
 
-    const hiddenTabIds = new Set<string>();
-    if (splitTabId) hiddenTabIds.add(splitTabId);
-
-    if (isNewTab) {
-      return (
-        <div style={{ flex: 1, position: 'relative' }}>
-          <NewTabPage onNavigate={handleNavigate} />
-        </div>
-      );
-    }
-
     return (
-      <>
-        <div style={{ flex: 1, position: 'relative', background: '#fff' }}>
-          {tabs.map((tab) => (
-            <WebViewTab
-              key={tab.id}
-              tabId={tab.id}
-              active={tab.active && !hiddenTabIds.has(tab.id)}
-              url={tab.url}
-              onUrlChange={handleUrlChange}
-              onTitleChange={handleTitleChange}
-              onLoadingChange={handleLoadingChange}
-              onFaviconChange={handleFaviconChange}
-              onRegister={registerWebView}
-              onUnregister={unregisterWebView}
-              onStatusUpdate={setStatusText}
-            />
-          ))}
-        </div>
+      <div style={{ flex: 1, position: 'relative', background: '#fff', overflow: 'hidden' }}>
+        {tabs.map((tab) => (
+          <WebViewTab
+            key={tab.id}
+            tabId={tab.id}
+            active={tab.active}
+            url={tab.url}
+            onUrlChange={handleUrlChange}
+            onTitleChange={handleTitleChange}
+            onLoadingChange={handleLoadingChange}
+            onFaviconChange={handleFaviconChange}
+            onRegister={registerWebView}
+            onUnregister={unregisterWebView}
+            onStatusUpdate={setStatusText}
+          />
+        ))}
+        {isNewTab && (
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
+            <NewTabPage onNavigate={handleNavigate} />
+          </div>
+        )}
         <StatusBar text={statusText} visible={!!statusText} />
-      </>
+      </div>
     );
   };
 
