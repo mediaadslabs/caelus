@@ -6,6 +6,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send(IPC_CHANNELS.WINDOW_MAXIMIZE),
   close: () => ipcRenderer.send(IPC_CHANNELS.WINDOW_CLOSE),
 
+  sessionLoad: () => ipcRenderer.invoke(IPC_CHANNELS.SESSION_LOAD),
+  sessionSave: (data: { tabs: { url: string; title: string; pinned: boolean }[]; activeIndex: number }) =>
+    ipcRenderer.send(IPC_CHANNELS.SESSION_SAVE, data),
+  onSessionSaveBeforeQuit: (callback: () => void) => {
+    ipcRenderer.on('session:save-before-quit', () => callback());
+  },
+
   onTabUrlChanged: (callback: (data: { tabId: string; url: string }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.TAB_URL_CHANGED, (_event, data) => callback(data));
   },

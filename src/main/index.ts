@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
+import { saveSession, loadSession } from './session';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -50,6 +51,13 @@ app.on('window-all-closed', () => {
   }
 });
 
+app.on('before-quit', () => {
+  const wc = mainWindow?.webContents;
+  if (wc && !wc.isDestroyed()) {
+    wc.send('session:save-before-quit');
+  }
+});
+
 ipcMain.on(IPC_CHANNELS.WINDOW_MINIMIZE, () => {
   mainWindow?.minimize();
 });
@@ -64,4 +72,12 @@ ipcMain.on(IPC_CHANNELS.WINDOW_MAXIMIZE, () => {
 
 ipcMain.on(IPC_CHANNELS.WINDOW_CLOSE, () => {
   mainWindow?.close();
+});
+
+ipcMain.handle(IPC_CHANNELS.SESSION_LOAD, () => {
+  return loadSession();
+});
+
+ipcMain.on(IPC_CHANNELS.SESSION_SAVE, (_event, data: { tabs: { url: string; title: string; pinned: boolean }[]; activeIndex: number }) => {
+  saveSession(data.tabs, data.activeIndex);
 });

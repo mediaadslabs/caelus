@@ -17,4 +17,6 @@ export const IPC_CHANNELS = {
   WINDOW_CLOSE: 'window:close',
   NAVIGATE_TO_URL: 'navigate:to-url',
   BANG_RESOLVE: 'bang:resolve',
+  SESSION_SAVE: 'session:save',
+  SESSION_LOAD: 'session:load',
 } as const;
