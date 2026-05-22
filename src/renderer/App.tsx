@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Titlebar from './components/Titlebar';
 import TabStrip from './components/TabStrip';
 import Omnibox from './components/Omnibox';
@@ -8,7 +8,7 @@ import VerticalTabs from './components/VerticalTabs';
 import SplitView from './components/SplitView';
 import NewTabPage from './components/NewTabPage';
 import Settings from './components/Settings';
-import WebViewTab from './components/WebViewTab';
+import WebViewTab, { getWebViewHandle } from './components/WebViewTab';
 import { LayoutProvider, useLayout } from './context/LayoutContext';
 import { useQuickLinkCopy } from './hooks/useQuickLinkCopy';
 import type { WebViewHandle, Bookmark } from '../shared/types';
@@ -55,25 +55,16 @@ function BrowserContent() {
   const [lastActiveTabId, setLastActiveTabId] = useState<string | null>(null);
   const [splitRatio, setSplitRatio] = useState(0.5);
   const [showSettings, setShowSettings] = useState(false);
-  const webviewRefs = useRef<Map<string, WebViewHandle>>(new Map());
   const activeTab = tabs.find((t) => t.active) || tabs[0];
   const { mode } = useLayout();
 
   useQuickLinkCopy(activeTab?.url || '');
 
-  const registerWebView = useCallback((tabId: string, handle: WebViewHandle) => {
-    webviewRefs.current.set(tabId, handle);
-  }, []);
-
-  const unregisterWebView = useCallback((tabId: string) => {
-    webviewRefs.current.delete(tabId);
-  }, []);
-
   const withActiveWebView = useCallback((fn: (wv: WebViewHandle) => void) => {
     const active = tabs.find((t) => t.active);
     if (active) {
-      const wv = webviewRefs.current.get(active.id);
-      if (wv) fn(wv);
+      const handle = getWebViewHandle(active.id);
+      if (handle) fn(handle);
     }
   }, [tabs]);
 
@@ -94,7 +85,6 @@ function BrowserContent() {
     setTabs((prev) => {
       const idx = prev.findIndex((t) => t.id === tabId);
       const filtered = prev.filter((t) => t.id !== tabId);
-      unregisterWebView(tabId);
       if (filtered.length === 0) return [{ ...createTab(), active: true }];
       if (prev.find((t) => t.id === tabId)?.active) {
         filtered[Math.min(idx, filtered.length - 1)] = {
@@ -105,7 +95,7 @@ function BrowserContent() {
       return filtered;
     });
     setSplitTabId((prev) => (prev === tabId ? null : prev));
-  }, [unregisterWebView]);
+  }, []);
 
   const newTab = useCallback(() => {
     setTabs((prev) =>
@@ -174,8 +164,6 @@ function BrowserContent() {
           onTitleChange={handleTitleChange}
           onLoadingChange={handleLoadingChange}
           onFaviconChange={handleFaviconChange}
-          onRegister={registerWebView}
-          onUnregister={unregisterWebView}
           onStatusUpdate={setStatusText}
           onCloseSplit={() => setSplitTabId(null)}
           splitRatio={splitRatio}
@@ -196,8 +184,6 @@ function BrowserContent() {
             onTitleChange={handleTitleChange}
             onLoadingChange={handleLoadingChange}
             onFaviconChange={handleFaviconChange}
-            onRegister={registerWebView}
-            onUnregister={unregisterWebView}
             onStatusUpdate={setStatusText}
           />
         ))}

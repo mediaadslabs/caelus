@@ -9,8 +9,6 @@ interface WebViewTabProps {
   onTitleChange: (tabId: string, title: string) => void;
   onLoadingChange: (tabId: string, loading: boolean) => void;
   onFaviconChange: (tabId: string, favicon: string) => void;
-  onRegister: (tabId: string, handle: WebViewHandle) => void;
-  onUnregister: (tabId: string) => void;
   onStatusUpdate?: (text: string) => void;
 }
 
@@ -28,8 +26,6 @@ export default function WebViewTab({
   onTitleChange,
   onLoadingChange,
   onFaviconChange,
-  onRegister,
-  onUnregister,
   onStatusUpdate,
 }: WebViewTabProps) {
   const webviewRef = useRef<Electron.WebviewTag | null>(null);
@@ -63,14 +59,6 @@ export default function WebViewTab({
   };
 
   handleRefMap.set(tabId, handle);
-
-  useEffect(() => {
-    onRegister(tabId, handle);
-    return () => {
-      onUnregister(tabId);
-      handleRefMap.delete(tabId);
-    };
-  }, [tabId]);
 
   useEffect(() => {
     if (attached && pendingUrlRef.current) {

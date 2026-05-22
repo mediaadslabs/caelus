@@ -10,8 +10,6 @@ interface SplitViewProps {
   onTitleChange: (tabId: string, title: string) => void;
   onLoadingChange: (tabId: string, loading: boolean) => void;
   onFaviconChange: (tabId: string, favicon: string) => void;
-  onRegister: (tabId: string, handle: WebViewHandle) => void;
-  onUnregister: (tabId: string) => void;
   onStatusUpdate: (text: string) => void;
   onCloseSplit: () => void;
   splitRatio: number;
@@ -26,8 +24,6 @@ export default function SplitView({
   onTitleChange,
   onLoadingChange,
   onFaviconChange,
-  onRegister,
-  onUnregister,
   onStatusUpdate,
   onCloseSplit,
   splitRatio,
@@ -85,8 +81,6 @@ export default function SplitView({
           onTitleChange={onTitleChange}
           onLoadingChange={onLoadingChange}
           onFaviconChange={onFaviconChange}
-          onRegister={onRegister}
-          onUnregister={onUnregister}
           onStatusUpdate={onStatusUpdate}
         />
       </div>
@@ -135,8 +129,6 @@ export default function SplitView({
           onTitleChange={onTitleChange}
           onLoadingChange={onLoadingChange}
           onFaviconChange={onFaviconChange}
-          onRegister={onRegister}
-          onUnregister={onUnregister}
           onStatusUpdate={onStatusUpdate}
         />
       </div>
