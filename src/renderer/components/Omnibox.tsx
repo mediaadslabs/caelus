@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { SEARCH_ENGINE } from '../../shared/constants';
+import { useLayout } from '../context/LayoutContext';
 
 interface OmniboxProps {
   url: string;
@@ -52,6 +53,7 @@ export default function Omnibox({
   const [inputValue, setInputValue] = React.useState(url);
   const [focused, setFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const { cycleMode, mode } = useLayout();
 
   React.useEffect(() => {
     if (!focused) {
@@ -144,6 +146,17 @@ export default function Omnibox({
           }}
         />
       </div>
+      <button
+        onClick={cycleMode}
+        style={{
+          ...navBtnStyle,
+          opacity: 0.5,
+          fontSize: 10,
+        }}
+        title={`Layout: ${mode}`}
+      >
+        {mode === 'classic' ? '⊞' : mode === 'compact' ? '⊟' : '⊡'}
+      </button>
     </div>
   );
 }
