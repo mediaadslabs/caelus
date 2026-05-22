@@ -9,9 +9,9 @@ interface WebViewTabProps {
   onTitleChange: (tabId: string, title: string) => void;
   onLoadingChange: (tabId: string, loading: boolean) => void;
   onFaviconChange: (tabId: string, favicon: string) => void;
-  onNavStateChange: (tabId: string, canGoBack: boolean, canGoForward: boolean) => void;
   onRegister: (tabId: string, handle: WebViewHandle) => void;
   onUnregister: (tabId: string) => void;
+  onStatusUpdate?: (text: string) => void;
 }
 
 const handleRefMap = new Map<string, WebViewHandle>();
@@ -28,9 +28,9 @@ export default function WebViewTab({
   onTitleChange,
   onLoadingChange,
   onFaviconChange,
-  onNavStateChange,
   onRegister,
   onUnregister,
+  onStatusUpdate,
 }: WebViewTabProps) {
   const webviewRef = useRef<Electron.WebviewTag | null>(null);
   const [ready, setReady] = useState(false);
@@ -67,23 +67,18 @@ export default function WebViewTab({
     const wv = webviewRef.current;
     if (!wv) return;
 
-    const onDidNavigate = (e: Electron.DidNavigateEvent) => {
-      onUrlChange(tabId, e.url);
-    };
+    const onDidNavigate = (e: Electron.DidNavigateEvent) => onUrlChange(tabId, e.url);
     const onDidNavigateInPage = (e: Electron.DidNavigateInPageEvent) => {
       if (e.isMainFrame) onUrlChange(tabId, e.url);
     };
-    const onPageTitleUpdated = (e: Electron.PageTitleUpdatedEvent) => {
-      onTitleChange(tabId, e.title);
-    };
-    const onDidStartLoading = () => {
-      onLoadingChange(tabId, true);
-    };
-    const onDidStopLoading = () => {
-      onLoadingChange(tabId, false);
-    };
+    const onPageTitleUpdated = (e: Electron.PageTitleUpdatedEvent) => onTitleChange(tabId, e.title);
+    const onDidStartLoading = () => onLoadingChange(tabId, true);
+    const onDidStopLoading = () => onLoadingChange(tabId, false);
     const onPageFaviconUpdated = (e: Electron.PageFaviconUpdatedEvent) => {
       if (e.favicons.length > 0) onFaviconChange(tabId, e.favicons[0]);
+    };
+    const onUpdateTargetUrl = (e: Electron.UpdateTargetUrlEvent) => {
+      onStatusUpdate?.(e.url);
     };
 
     wv.addEventListener('did-navigate', onDidNavigate);
@@ -92,6 +87,7 @@ export default function WebViewTab({
     wv.addEventListener('did-start-loading', onDidStartLoading);
     wv.addEventListener('did-stop-loading', onDidStopLoading);
     wv.addEventListener('page-favicon-updated', onPageFaviconUpdated);
+    wv.addEventListener('update-target-url', onUpdateTargetUrl);
 
     return () => {
       wv.removeEventListener('did-navigate', onDidNavigate);
@@ -100,8 +96,9 @@ export default function WebViewTab({
       wv.removeEventListener('did-start-loading', onDidStartLoading);
       wv.removeEventListener('did-stop-loading', onDidStopLoading);
       wv.removeEventListener('page-favicon-updated', onPageFaviconUpdated);
+      wv.removeEventListener('update-target-url', onUpdateTargetUrl);
     };
-  }, [tabId, onUrlChange, onTitleChange, onLoadingChange, onFaviconChange]);
+  }, [tabId, onUrlChange, onTitleChange, onLoadingChange, onFaviconChange, onStatusUpdate]);
 
   useEffect(() => {
     if (!ready) return;

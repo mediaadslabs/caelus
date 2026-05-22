@@ -2,7 +2,10 @@ import React, { useCallback, useRef, useState } from 'react';
 import Titlebar from './components/Titlebar';
 import TabStrip from './components/TabStrip';
 import Omnibox from './components/Omnibox';
+import BookmarksBar from './components/BookmarksBar';
+import StatusBar from './components/StatusBar';
 import WebViewTab from './components/WebViewTab';
+import type { WebViewHandle, Bookmark } from '../shared/types';
 
 let tabIdCounter = 0;
 function generateTabId(): string {
@@ -36,10 +39,11 @@ function createTab(url: string = 'about:blank'): TabData {
   };
 }
 
-import { WebViewHandle } from '../shared/types';
-
 export default function App() {
   const [tabs, setTabs] = useState<TabData[]>([{ ...createTab(), active: true }]);
+  const [bookmarks] = useState<Bookmark[]>([]);
+  const [showBookmarksBar] = useState(true);
+  const [statusText, setStatusText] = useState('');
   const webviewRefs = useRef<Map<string, WebViewHandle>>(new Map());
   const activeTab = tabs.find((t) => t.active) || tabs[0];
 
@@ -73,8 +77,7 @@ export default function App() {
       const filtered = prev.filter((t) => t.id !== tabId);
       unregisterWebView(tabId);
       if (filtered.length === 0) {
-        const newTab = { ...createTab(), active: true };
-        return [newTab];
+        return [{ ...createTab(), active: true }];
       }
       if (prev.find((t) => t.id === tabId)?.active) {
         const newIdx = Math.min(idx, filtered.length - 1);
@@ -94,46 +97,29 @@ export default function App() {
     withActiveWebView((wv) => wv.loadURL(url));
   }, [withActiveWebView]);
 
-  const handleGoBack = useCallback(() => {
-    withActiveWebView((wv) => wv.goBack());
-  }, [withActiveWebView]);
+  const handleGoBack = useCallback(() => withActiveWebView((wv) => wv.goBack()), [withActiveWebView]);
+  const handleGoForward = useCallback(() => withActiveWebView((wv) => wv.goForward()), [withActiveWebView]);
+  const handleReload = useCallback(() => withActiveWebView((wv) => wv.reload()), [withActiveWebView]);
+  const handleStop = useCallback(() => withActiveWebView((wv) => wv.stop()), [withActiveWebView]);
 
-  const handleGoForward = useCallback(() => {
-    withActiveWebView((wv) => wv.goForward());
-  }, [withActiveWebView]);
-
-  const handleReload = useCallback(() => {
-    withActiveWebView((wv) => wv.reload());
-  }, [withActiveWebView]);
-
-  const handleStop = useCallback(() => {
-    withActiveWebView((wv) => wv.stop());
+  const handleBookmarkClick = useCallback((url: string) => {
+    withActiveWebView((wv) => wv.loadURL(url));
   }, [withActiveWebView]);
 
   const handleUrlChange = useCallback(
     (tabId: string, url: string) => updateTab(tabId, { url }),
     [updateTab],
   );
-
   const handleTitleChange = useCallback(
     (tabId: string, title: string) => updateTab(tabId, { title }),
     [updateTab],
   );
-
   const handleLoadingChange = useCallback(
     (tabId: string, loading: boolean) => updateTab(tabId, { loading }),
     [updateTab],
   );
-
   const handleFaviconChange = useCallback(
     (tabId: string, favicon: string) => updateTab(tabId, { favicon }),
-    [updateTab],
-  );
-
-  const handleNavStateChange = useCallback(
-    (tabId: string, canGoBack: boolean, canGoForward: boolean) => {
-      updateTab(tabId, { canGoBack, canGoForward });
-    },
     [updateTab],
   );
 
@@ -153,6 +139,11 @@ export default function App() {
         onReload={handleReload}
         onStop={handleStop}
       />
+      <BookmarksBar
+        bookmarks={bookmarks}
+        visible={showBookmarksBar}
+        onBookmarkClick={handleBookmarkClick}
+      />
       <div style={{ flex: 1, position: 'relative', background: '#fff' }}>
         {tabs.map((tab) => (
           <WebViewTab
@@ -164,12 +155,13 @@ export default function App() {
             onTitleChange={handleTitleChange}
             onLoadingChange={handleLoadingChange}
             onFaviconChange={handleFaviconChange}
-            onNavStateChange={handleNavStateChange}
             onRegister={registerWebView}
             onUnregister={unregisterWebView}
+            onStatusUpdate={setStatusText}
           />
         ))}
       </div>
+      <StatusBar text={statusText} visible={!!statusText} />
     </div>
   );
 }
