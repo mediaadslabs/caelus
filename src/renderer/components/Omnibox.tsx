@@ -15,7 +15,6 @@ interface OmniboxProps {
 }
 
 function isUrl(text: string): boolean {
-  if (text.includes(' ') || text.includes('.')) return false;
   try {
     new URL(text);
     return true;
@@ -24,17 +23,16 @@ function isUrl(text: string): boolean {
   }
 }
 
+function looksLikeUrl(text: string): boolean {
+  return /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(text) && !text.includes(' ');
+}
+
 function normalizeUrl(text: string): string {
   const trimmed = text.trim();
   if (trimmed === '') return 'about:blank';
-  if (isUrl(trimmed)) {
-    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('file://')) {
-      return `https://${trimmed}`;
-    }
-    return trimmed;
-  }
-  if (trimmed.startsWith('!')) {
-    return trimmed;
+  if (isUrl(trimmed)) return trimmed;
+  if (looksLikeUrl(trimmed) && !trimmed.startsWith('http')) {
+    return `https://${trimmed}`;
   }
   return SEARCH_ENGINE.replace('{searchTerms}', encodeURIComponent(trimmed));
 }
@@ -62,9 +60,21 @@ export default function Omnibox({
   }, [url, focused]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    async (e: React.KeyboardEvent) => {
       if (e.key === 'Enter') {
-        const navUrl = normalizeUrl(inputValue);
+        const raw = inputValue.trim();
+        const hasBang = raw.startsWith('!') || raw.match(/\s+!/);
+
+        if (hasBang && window.electronAPI?.bangResolve) {
+          const bangUrl = await window.electronAPI.bangResolve(raw);
+          if (bangUrl) {
+            onNavigate(bangUrl);
+            inputRef.current?.blur();
+            return;
+          }
+        }
+
+        const navUrl = normalizeUrl(raw);
         onNavigate(navUrl);
         inputRef.current?.blur();
       }

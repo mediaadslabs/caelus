@@ -3,6 +3,7 @@ import * as path from 'path';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 import { saveSession, loadSession } from './session';
 import { setupDownloadHandler } from './downloads';
+import { resolveBangQuery } from './bangs';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -83,4 +84,8 @@ ipcMain.handle(IPC_CHANNELS.SESSION_LOAD, () => {
 
 ipcMain.on(IPC_CHANNELS.SESSION_SAVE, (_event, data: { tabs: { url: string; title: string; pinned: boolean }[]; activeIndex: number }) => {
   saveSession(data.tabs, data.activeIndex);
+});
+
+ipcMain.handle(IPC_CHANNELS.BANG_RESOLVE, (_event, query: string) => {
+  return resolveBangQuery(query);
 });
