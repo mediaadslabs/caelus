@@ -31,7 +31,10 @@
       "icon": "resources/icon.png"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "resources/icon.png"
     },
     "win": {
@@ -51,6 +54,9 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
+    "@cliqz/adblocker-electron": "^1.34.0",
+    "@ghostery/adblocker-electron": "^2.17.3",
+    "cross-fetch": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

@@ -4,6 +4,7 @@ import { IPC_CHANNELS } from '../shared/ipc-channels';
 import { saveSession, loadSession } from './session';
 import { setupDownloadHandler } from './downloads';
 import { resolveBangQuery } from './bangs';
+import { setupAdBlocking } from './adblock';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -37,6 +38,19 @@ function createWindow(): void {
   });
 
   setupDownloadHandler(mainWindow);
+  setupAdBlocking(mainWindow.webContents.session);
+
+  mainWindow.webContents.session.setPermissionRequestHandler((_webContents, permission, callback) => {
+    callback(false);
+  });
+
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...details.responseHeaders };
+    if (responseHeaders['set-cookie']) {
+      delete responseHeaders['set-cookie'];
+    }
+    callback({ responseHeaders });
+  });
 }
 
 app.whenReady().then(() => {
