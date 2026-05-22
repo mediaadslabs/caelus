@@ -1,13 +1,15 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Titlebar from './components/Titlebar';
 import TabStrip from './components/TabStrip';
 import Omnibox from './components/Omnibox';
 import BookmarksBar from './components/BookmarksBar';
 import StatusBar from './components/StatusBar';
 import VerticalTabs from './components/VerticalTabs';
+import SplitView from './components/SplitView';
 import WebViewTab from './components/WebViewTab';
 import { LayoutProvider, useLayout } from './context/LayoutContext';
-import type { WebViewHandle, Bookmark, LayoutMode } from '../shared/types';
+import { useQuickLinkCopy } from './hooks/useQuickLinkCopy';
+import type { WebViewHandle, Bookmark } from '../shared/types';
 
 let tabIdCounter = 0;
 function generateTabId(): string {
@@ -47,9 +49,14 @@ function BrowserContent() {
   const [showBookmarksBar] = useState(true);
   const [statusText, setStatusText] = useState('');
   const [verticalCollapsed, setVerticalCollapsed] = useState(false);
+  const [splitTabId, setSplitTabId] = useState<string | null>(null);
+  const [lastActiveTabId, setLastActiveTabId] = useState<string | null>(null);
+  const [splitRatio, setSplitRatio] = useState(0.5);
   const webviewRefs = useRef<Map<string, WebViewHandle>>(new Map());
   const activeTab = tabs.find((t) => t.active) || tabs[0];
   const { mode } = useLayout();
+
+  useQuickLinkCopy(activeTab?.url || '');
 
   const registerWebView = useCallback((tabId: string, handle: WebViewHandle) => {
     webviewRefs.current.set(tabId, handle);
@@ -72,8 +79,13 @@ function BrowserContent() {
   }, []);
 
   const selectTab = useCallback((tabId: string) => {
-    setTabs((prev) => prev.map((t) => ({ ...t, active: t.id === tabId })));
-  }, []);
+    setTabs((prev) => {
+      const oldActive = prev.find((t) => t.active);
+      return prev.map((t) => ({ ...t, active: t.id === tabId }));
+    });
+    setLastActiveTabId((prev) => (prev !== tabId ? activeTab?.id || prev : prev));
+    setSplitTabId((prev) => (prev === tabId ? null : prev));
+  }, [activeTab]);
 
   const closeTab = useCallback((tabId: string) => {
     setTabs((prev) => {
@@ -89,6 +101,7 @@ function BrowserContent() {
       }
       return filtered;
     });
+    setSplitTabId((prev) => (prev === tabId ? null : prev));
   }, [unregisterWebView]);
 
   const newTab = useCallback(() => {
@@ -96,6 +109,26 @@ function BrowserContent() {
       prev.map((t) => ({ ...t, active: false })).concat({ ...createTab(), active: true }),
     );
   }, []);
+
+  const toggleSplit = useCallback(() => {
+    if (splitTabId) {
+      setSplitTabId(null);
+      return;
+    }
+    if (lastActiveTabId && lastActiveTabId !== activeTab?.id) {
+      setSplitTabId(lastActiveTabId);
+    } else {
+      const otherTab = tabs.find((t) => t.id !== activeTab?.id && !t.pinned);
+      if (otherTab) {
+        setSplitTabId(otherTab.id);
+      } else {
+        const newId = generateTabId();
+        const newTabData = { ...createTab(), id: newId, active: false };
+        setTabs((prev) => [...prev, newTabData]);
+        setSplitTabId(newId);
+      }
+    }
+  }, [splitTabId, lastActiveTabId, activeTab, tabs]);
 
   const handleNavigate = useCallback((url: string) => withActiveWebView((wv) => wv.loadURL(url)), [withActiveWebView]);
   const handleGoBack = useCallback(() => withActiveWebView((wv) => wv.goBack()), [withActiveWebView]);
@@ -109,27 +142,85 @@ function BrowserContent() {
   const handleLoadingChange = useCallback((tabId: string, loading: boolean) => updateTab(tabId, { loading }), [updateTab]);
   const handleFaviconChange = useCallback((tabId: string, favicon: string) => updateTab(tabId, { favicon }), [updateTab]);
 
-  const webviewArea = (
-    <>
-      <div style={{ flex: 1, position: 'relative', background: '#fff' }}>
-        {tabs.map((tab) => (
-          <WebViewTab
-            key={tab.id}
-            tabId={tab.id}
-            active={tab.active}
-            url={tab.url}
-            onUrlChange={handleUrlChange}
-            onTitleChange={handleTitleChange}
-            onLoadingChange={handleLoadingChange}
-            onFaviconChange={handleFaviconChange}
-            onRegister={registerWebView}
-            onUnregister={unregisterWebView}
-            onStatusUpdate={setStatusText}
-          />
-        ))}
-      </div>
-      <StatusBar text={statusText} visible={!!statusText} />
-    </>
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        toggleSplit();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [toggleSplit]);
+
+  const renderWebviewArea = () => {
+    const isSplit = splitTabId && splitTabId !== activeTab?.id;
+
+    if (isSplit && activeTab) {
+      return (
+        <SplitView
+          tabs={tabs}
+          activeTabId={activeTab.id}
+          splitTabId={splitTabId}
+          onUrlChange={handleUrlChange}
+          onTitleChange={handleTitleChange}
+          onLoadingChange={handleLoadingChange}
+          onFaviconChange={handleFaviconChange}
+          onRegister={registerWebView}
+          onUnregister={unregisterWebView}
+          onStatusUpdate={setStatusText}
+          onCloseSplit={() => setSplitTabId(null)}
+          splitRatio={splitRatio}
+          onSplitRatioChange={setSplitRatio}
+        />
+      );
+    }
+
+    const hiddenTabIds = new Set<string>();
+    if (splitTabId) hiddenTabIds.add(splitTabId);
+
+    return (
+      <>
+        <div style={{ flex: 1, position: 'relative', background: '#fff' }}>
+          {tabs.map((tab) => (
+            <WebViewTab
+              key={tab.id}
+              tabId={tab.id}
+              active={tab.active && !hiddenTabIds.has(tab.id)}
+              url={tab.url}
+              onUrlChange={handleUrlChange}
+              onTitleChange={handleTitleChange}
+              onLoadingChange={handleLoadingChange}
+              onFaviconChange={handleFaviconChange}
+              onRegister={registerWebView}
+              onUnregister={unregisterWebView}
+              onStatusUpdate={setStatusText}
+            />
+          ))}
+        </div>
+        <StatusBar text={statusText} visible={!!statusText} />
+      </>
+    );
+  };
+
+  const omniboxContent = (
+    <Omnibox
+      url={activeTab?.url || ''}
+      loading={activeTab?.loading || false}
+      canGoBack={activeTab?.canGoBack || false}
+      canGoForward={activeTab?.canGoForward || false}
+      onNavigate={handleNavigate}
+      onGoBack={handleGoBack}
+      onGoForward={handleGoForward}
+      onReload={handleReload}
+      onStop={handleStop}
+      onSplitToggle={toggleSplit}
+      isSplit={!!(splitTabId && splitTabId !== activeTab?.id)}
+    />
+  );
+
+  const bookmarksContent = (
+    <BookmarksBar bookmarks={bookmarks} visible={showBookmarksBar} onBookmarkClick={handleBookmarkClick} />
   );
 
   if (mode === 'vertical') {
@@ -144,44 +235,22 @@ function BrowserContent() {
           onToggleCollapse={() => setVerticalCollapsed((v) => !v)}
         />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Omnibox
-            url={activeTab?.url || ''}
-            loading={activeTab?.loading || false}
-            canGoBack={activeTab?.canGoBack || false}
-            canGoForward={activeTab?.canGoForward || false}
-            onNavigate={handleNavigate}
-            onGoBack={handleGoBack}
-            onGoForward={handleGoForward}
-            onReload={handleReload}
-            onStop={handleStop}
-          />
-          <BookmarksBar bookmarks={bookmarks} visible={showBookmarksBar} onBookmarkClick={handleBookmarkClick} />
-          {webviewArea}
+          {omniboxContent}
+          {bookmarksContent}
+          {renderWebviewArea()}
         </div>
       </div>
     );
   }
-
-  const isCompact = mode === 'compact';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <Titlebar>
         <TabStrip tabs={tabs} onSelect={selectTab} onClose={closeTab} onNewTab={newTab} />
       </Titlebar>
-      <Omnibox
-        url={activeTab?.url || ''}
-        loading={activeTab?.loading || false}
-        canGoBack={activeTab?.canGoBack || false}
-        canGoForward={activeTab?.canGoForward || false}
-        onNavigate={handleNavigate}
-        onGoBack={handleGoBack}
-        onGoForward={handleGoForward}
-        onReload={handleReload}
-        onStop={handleStop}
-      />
-      <BookmarksBar bookmarks={bookmarks} visible={showBookmarksBar} onBookmarkClick={handleBookmarkClick} />
-      {webviewArea}
+      {omniboxContent}
+      {bookmarksContent}
+      {renderWebviewArea()}
     </div>
   );
 }

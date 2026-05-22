@@ -12,6 +12,8 @@ interface OmniboxProps {
   onGoForward: () => void;
   onReload: () => void;
   onStop: () => void;
+  onSplitToggle?: () => void;
+  isSplit?: boolean;
 }
 
 function isUrl(text: string): boolean {
@@ -47,6 +49,8 @@ export default function Omnibox({
   onGoForward,
   onReload,
   onStop,
+  onSplitToggle,
+  isSplit,
 }: OmniboxProps) {
   const [inputValue, setInputValue] = React.useState(url);
   const [focused, setFocused] = React.useState(false);
@@ -109,6 +113,18 @@ export default function Omnibox({
       ) : (
         <button onClick={onReload} style={navBtnStyle} title="Reload">
           ↻
+        </button>
+      )}
+      {onSplitToggle && (
+        <button
+          onClick={onSplitToggle}
+          style={{
+            ...navBtnStyle,
+            color: isSplit ? 'var(--accent)' : undefined,
+          }}
+          title={isSplit ? 'Close split view' : 'Split view (Ctrl+Shift+S)'}
+        >
+          ⊞
         </button>
       )}
 
