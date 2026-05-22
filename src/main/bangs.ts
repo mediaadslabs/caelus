@@ -13,13 +13,20 @@ let bangsCache: BangEntry[] | null = null;
 function loadBangs(): BangEntry[] {
   if (bangsCache) return bangsCache;
   try {
-    const bangsPath = path.join(app.getAppPath(), 'src', 'bangs', 'bangs.json');
-    const devPath = path.join(__dirname, '..', '..', 'src', 'bangs', 'bangs.json');
-    const prodPath = path.join(__dirname, 'bangs.json');
+    const possiblePaths = [
+      path.join(__dirname, '..', '..', 'src', 'bangs', 'bangs.json'),
+      path.join(__dirname, '..', '..', '..', 'src', 'bangs', 'bangs.json'),
+      path.join(app.getAppPath(), 'src', 'bangs', 'bangs.json'),
+      path.join(process.resourcesPath || '', 'src', 'bangs', 'bangs.json'),
+      path.join(__dirname, 'bangs.json'),
+    ];
 
-    let resolvedPath = prodPath;
-    if (fs.existsSync(devPath)) resolvedPath = devPath;
-    else if (fs.existsSync(bangsPath)) resolvedPath = bangsPath;
+    let resolvedPath = possiblePaths.find((p) => fs.existsSync(p));
+
+    if (!resolvedPath) {
+      bangsCache = [];
+      return bangsCache;
+    }
 
     const raw = fs.readFileSync(resolvedPath, 'utf-8');
     bangsCache = JSON.parse(raw) as BangEntry[];

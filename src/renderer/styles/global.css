@@ -78,6 +78,19 @@ button {
   font-family: inherit;
 }
 
+button:hover {
+  background: var(--bg-hover);
+}
+
+.tab-close-btn:hover {
+  background: var(--bg-active) !important;
+  opacity: 1 !important;
+}
+
+div:hover > .tab-close-btn {
+  opacity: 1;
+}
+
 a {
   color: var(--accent);
   text-decoration: none;
