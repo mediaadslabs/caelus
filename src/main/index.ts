@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 import { saveSession, loadSession } from './session';
+import { setupDownloadHandler } from './downloads';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -33,6 +34,8 @@ function createWindow(): void {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  setupDownloadHandler(mainWindow);
 }
 
 app.whenReady().then(() => {
