@@ -29,3 +29,11 @@ export interface BangEntry {
 }
 
 export type LayoutMode = 'classic' | 'compact' | 'vertical';
+
+export interface WebViewHandle {
+  goBack: () => void;
+  goForward: () => void;
+  reload: () => void;
+  stop: () => void;
+  loadURL: (url: string) => void;
+}

@@ -105,18 +105,25 @@ function WindowControls() {
   );
 }
 
-export default function Titlebar() {
+interface TitlebarProps {
+  children?: React.ReactNode;
+}
+
+export default function Titlebar({ children }: TitlebarProps) {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   return (
     <div style={styles.titlebar}>
       <div style={styles.left}>
         {isMac && <TrafficLightButtons />}
-        <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: 1 }}>
-          Helium Clone
-        </span>
       </div>
-      <div style={styles.center}>{/* Tab strip will go here */}</div>
+      <div style={{
+        flex: 1,
+        WebkitAppRegion: 'no-drag' as any,
+        overflow: 'hidden',
+      }}>
+        {children}
+      </div>
       <div style={styles.right}>{!isMac && <WindowControls />}</div>
     </div>
   );
