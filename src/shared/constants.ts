@@ -1,5 +1,10 @@
 export const DEFAULT_URL = 'about:blank';
 export const NEW_TAB_URL = 'about:blank';
 export const SEARCH_ENGINE = 'https://duckduckgo.com/?q={searchTerms}';
-export const APP_NAME = 'Helium Clone';
+export const APP_NAME = 'Caelus';
 export const APP_VERSION = '0.1.0';
+export const AUTHOR_NAME = 'Helder Ventura';
+export const COPYRIGHT_YEARS = '2013-2026';
+export const GITHUB_REPO = 'mediaadslabs/caelus';
+export const GITHUB_API_RELEASES = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+export const GITHUB_RELEASES_PAGE = `https://github.com/${GITHUB_REPO}/releases/latest`;

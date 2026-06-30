@@ -1,81 +1,22 @@
 import React from 'react';
 
-const styles: Record<string, React.CSSProperties> = {
-  titlebar: {
-    height: 'var(--titlebar-height)',
-    background: 'var(--bg-secondary)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottom: '1px solid var(--border)',
-    WebkitAppRegion: 'drag' as any,
-    flexShrink: 0,
-  },
-  left: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    paddingLeft: 12,
-  },
-  center: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    fontSize: 'var(--font-size-sm)',
-    color: 'var(--text-muted)',
-  },
-  right: {
-    display: 'flex',
-    alignItems: 'center',
-    WebkitAppRegion: 'no-drag' as any,
-  },
-  trafficLight: {
-    width: 12,
-    height: 12,
-    borderRadius: '50%',
-    border: 'none',
-    cursor: 'pointer',
-    WebkitAppRegion: 'no-drag' as any,
-  },
-  windowBtn: {
-    width: 46,
-    height: 'var(--titlebar-height)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--text-secondary)',
-    fontSize: 10,
-    transition: 'background var(--transition)',
-  },
-};
-
-declare global {
-  interface Window {
-    electronAPI?: {
-      minimize: () => void;
-      maximize: () => void;
-      close: () => void;
-    };
-  }
-}
-
 function TrafficLightButtons() {
   const api = window.electronAPI;
 
   return (
-    <div style={{ display: 'flex', gap: 8, paddingLeft: 12, WebkitAppRegion: 'no-drag' as any }}>
+    <div style={{ display: 'flex', gap: 8, paddingLeft: 12, WebkitAppRegion: 'no-drag' } as any}>
       <button
-        style={{ ...styles.trafficLight, background: '#ff5f57' }}
+        style={{ width: 12, height: 12, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#ff5f57', WebkitAppRegion: 'no-drag' } as any}
         onClick={() => api?.close()}
         title="Close"
       />
       <button
-        style={{ ...styles.trafficLight, background: '#febc2e' }}
+        style={{ width: 12, height: 12, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#febc2e', WebkitAppRegion: 'no-drag' } as any}
         onClick={() => api?.minimize()}
         title="Minimize"
       />
       <button
-        style={{ ...styles.trafficLight, background: '#28c840' }}
+        style={{ width: 12, height: 12, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#28c840', WebkitAppRegion: 'no-drag' } as any}
         onClick={() => api?.maximize()}
         title="Maximize"
       />
@@ -88,19 +29,21 @@ function WindowControls() {
 
   return (
     <div style={{ display: 'flex' }}>
-      <button style={styles.windowBtn} onClick={() => api?.minimize()} title="Minimize">
-        ─
-      </button>
-      <button style={styles.windowBtn} onClick={() => api?.maximize()} title="Maximize">
-        □
-      </button>
       <button
-        style={{ ...styles.windowBtn, color: 'var(--text-secondary)' }}
+        style={{ width: 46, height: 'var(--titlebar-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontSize: 10, transition: 'background var(--transition)' } as any}
+        onClick={() => api?.minimize()}
+        title="Minimize"
+      >─</button>
+      <button
+        style={{ width: 46, height: 'var(--titlebar-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontSize: 10, transition: 'background var(--transition)' } as any}
+        onClick={() => api?.maximize()}
+        title="Maximize"
+      >□</button>
+      <button
+        style={{ width: 46, height: 'var(--titlebar-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, transition: 'background var(--transition)', color: 'var(--text-secondary)' } as any}
         onClick={() => api?.close()}
         title="Close"
-      >
-        ✕
-      </button>
+      >✕</button>
     </div>
   );
 }
@@ -113,18 +56,14 @@ export default function Titlebar({ children }: TitlebarProps) {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   return (
-    <div style={styles.titlebar}>
-      <div style={styles.left}>
+    <div style={{ height: 'var(--titlebar-height)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', flexShrink: 0, WebkitAppRegion: 'drag' } as any}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 12, WebkitAppRegion: 'no-drag' } as any}>
         {isMac && <TrafficLightButtons />}
       </div>
-      <div style={{
-        flex: 1,
-        WebkitAppRegion: 'no-drag' as any,
-        overflow: 'hidden',
-      }}>
+      <div style={{ flex: 1, overflow: 'hidden', WebkitAppRegion: 'no-drag' } as any}>
         {children}
       </div>
-      <div style={styles.right}>{!isMac && <WindowControls />}</div>
+      <div style={{ display: 'flex', alignItems: 'center', WebkitAppRegion: 'no-drag' } as any}>{!isMac && <WindowControls />}</div>
     </div>
   );
 }

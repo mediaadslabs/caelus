@@ -69,7 +69,7 @@ export default function NewTabPage({ onNavigate }: NewTabPageProps) {
             fontWeight: 500,
           }}
         >
-          Helium Clone
+          Caelus
         </div>
       </div>
 

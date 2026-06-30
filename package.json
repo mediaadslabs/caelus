@@ -1,7 +1,29 @@
 {
-  "name": "helium-clone",
+  "name": "caelus",
   "version": "0.1.0",
-  "description": "A privacy-first, minimal web browser inspired by Helium",
+  "description": "A privacy-first browser with AI agent support and Chrome extensions",
+  "homepage": "https://github.com/mediaadslabs/caelus",
+  "author": {
+    "name": "Helder Ventura",
+    "email": "",
+    "url": "https://github.com/mediaadslabs"
+  },
+  "license": "MIT",
+  "keywords": [
+    "browser",
+    "privacy",
+    "ai",
+    "ollama",
+    "electron",
+    "webview"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mediaadslabs/caelus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mediaadslabs/caelus/issues"
+  },
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
@@ -13,11 +35,16 @@
     "build:renderer": "vite build",
     "start": "npm run build && electron .",
     "dist": "electron-builder",
+    "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:all": "electron-builder --linux --win --mac",
     "typecheck": "tsc --noEmit -p tsconfig.main.json && tsc --noEmit -p tsconfig.renderer.json"
   },
   "build": {
-    "appId": "com.helium-clone.app",
-    "productName": "Helium Clone",
+    "appId": "com.caelus.browser",
+    "productName": "Caelus",
+    "copyright": "Copyright © 2013-2026 Helder Ventura",
     "directories": {
       "output": "release"
     },
@@ -26,20 +53,63 @@
       "src/bangs/**/*",
       "resources/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "src/bangs",
+        "to": "bangs"
+      }
+    ],
     "mac": {
-      "target": "dmg",
-      "icon": "resources/icon.png"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "resources/icon.png",
+      "category": "public.app-category.utilities",
+      "hardenedRuntime": true
     },
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "rpm",
+        "snap"
       ],
-      "icon": "resources/icon.png"
+      "icon": "resources/icon.png",
+      "category": "Network",
+      "synopsis": "Privacy-first browser with AI agents",
+      "description": "Caelus is a modern, privacy-first web browser with built-in AI agent support via Ollama, Chrome extensions, and PWA support.",
+      "packageCategory": "net"
     },
     "win": {
-      "target": "nsis",
-      "icon": "resources/icon.png"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        "portable"
+      ],
+      "icon": "resources/icon.png",
+      "certificateSubjectName": ""
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Caelus",
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico",
+      "installerHeaderIcon": "resources/icon.ico"
+    },
+    "squirrelWindows": false,
+    "publish": {
+      "provider": "github",
+      "owner": "mediaadslabs",
+      "repo": "caelus",
+      "releaseType": "release"
     }
   },
   "devDependencies": {
@@ -57,6 +127,7 @@
     "@cliqz/adblocker-electron": "^1.34.0",
     "@ghostery/adblocker": "^2.17.3",
     "@ghostery/adblocker-electron": "^2.17.3",
+    "@mozilla/readability": "^0.6.0",
     "cross-fetch": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

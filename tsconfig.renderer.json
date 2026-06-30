@@ -3,10 +3,9 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "outDir": "dist/renderer",
-    "rootDir": "src/renderer",
+    "rootDir": "src",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext"
   },
-  "include": ["src/renderer/**/*", "src/shared/**/*"],
-  "references": [{ "path": "./tsconfig.main.json" }]
+  "include": ["src/renderer/**/*", "src/shared/**/*"]
 }

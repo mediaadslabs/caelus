@@ -14,6 +14,7 @@ interface SplitViewProps {
   onCloseSplit: () => void;
   splitRatio: number;
   onSplitRatioChange: (ratio: number) => void;
+  onContextAction?: (tabId: string, action: string, content: string) => void;
 }
 
 export default function SplitView({
@@ -28,6 +29,7 @@ export default function SplitView({
   onCloseSplit,
   splitRatio,
   onSplitRatioChange,
+  onContextAction,
 }: SplitViewProps) {
   const dragging = useRef(false);
 
@@ -82,6 +84,7 @@ export default function SplitView({
           onLoadingChange={onLoadingChange}
           onFaviconChange={onFaviconChange}
           onStatusUpdate={onStatusUpdate}
+          onContextAction={onContextAction}
         />
       </div>
 
@@ -130,6 +133,7 @@ export default function SplitView({
           onLoadingChange={onLoadingChange}
           onFaviconChange={onFaviconChange}
           onStatusUpdate={onStatusUpdate}
+          onContextAction={onContextAction}
         />
       </div>
     </div>

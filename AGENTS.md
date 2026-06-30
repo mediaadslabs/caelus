@@ -1,4 +1,4 @@
-# Helium Clone - Development Guide
+# Caelus - Development Guide
 
 ## Build Commands
 - `npm run build` - Full build (main + preload + renderer)
@@ -22,8 +22,18 @@
 - Uses `<webview>` tags for tab content rendering
 - IPC channels defined in `src/shared/ipc-channels.ts`
 - Layout modes: classic, compact, vertical (via LayoutContext)
-- Ad blocking via @ghostery/adblocker-electron
+- Ad blocking via pattern matching in main process
 - Session saved to `app.getPath('userData')/session.json`
+- Database (settings, agents, extensions) saved to `app.getPath('userData')/database.json`
+- Chrome extensions loaded via `session.loadExtension()` in main process
+- AI agents use Ollama API (`/api/chat` and `/api/tags` endpoints)
+
+## Features
+- **Chrome Extensions**: Load/unload in Settings > Extensions
+- **AI Agents**: Configure agents with system prompts, models, temperature in Settings > AI & Agents
+- **Agent Panel**: Click the ◆ button in toolbar to open the AI chat panel
+- **Ollama**: Configurable endpoint, fetch models button, per-agent model selection
+- **Database**: All settings, agents, and extension config persisted to database.json
 
 ## Conventions
 - TypeScript strict mode

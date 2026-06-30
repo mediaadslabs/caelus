@@ -5,9 +5,10 @@ interface BookmarksBarProps {
   bookmarks: Bookmark[];
   visible: boolean;
   onBookmarkClick: (url: string) => void;
+  onRemoveBookmark: (id: string) => void;
 }
 
-export default function BookmarksBar({ bookmarks, visible, onBookmarkClick }: BookmarksBarProps) {
+export default function BookmarksBar({ bookmarks, visible, onBookmarkClick, onRemoveBookmark }: BookmarksBarProps) {
   if (!visible) return null;
 
   return (
@@ -26,27 +27,64 @@ export default function BookmarksBar({ bookmarks, visible, onBookmarkClick }: Bo
       }}
     >
       {bookmarks.length === 0 && (
-        <span style={{ padding: '0 8px', color: 'var(--text-muted)' }}>Bookmarks bar</span>
+        <span style={{ padding: '0 8px', color: 'var(--text-muted)' }}>Bookmarks bar — click the ★ in the address bar to bookmark</span>
       )}
       {bookmarks.map((bm) => (
-        <button
+        <div
           key={bm.id}
-          onClick={() => onBookmarkClick(bm.url)}
           style={{
-            padding: '2px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            padding: '2px 4px',
             borderRadius: 'var(--radius-sm)',
-            color: 'var(--text-secondary)',
-            fontSize: 'var(--font-size-sm)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 150,
             transition: 'background var(--transition)',
           }}
-          title={bm.url}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
         >
-          {bm.title || bm.url}
-        </button>
+          <button
+            onClick={() => onBookmarkClick(bm.url)}
+            style={{
+              padding: '2px 6px',
+              color: 'var(--text-secondary)',
+              fontSize: 'var(--font-size-sm)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 150,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            title={bm.url}
+          >
+            {bm.title || bm.url}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemoveBookmark(bm.id); }}
+            style={{
+              width: 16,
+              height: 16,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 10,
+              color: 'var(--text-muted)',
+              opacity: 0,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'opacity var(--transition)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
+            title="Remove bookmark"
+          >
+            ✕
+          </button>
+        </div>
       ))}
     </div>
   );
