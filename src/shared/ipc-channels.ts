@@ -43,4 +43,5 @@ export const IPC_CHANNELS = {
   SYNC_TEST: 'sync:test',
   UPDATE_CHECK: 'update:check',
   UPDATE_DOWNLOAD: 'update:download',
+  LICENSE_VERIFY: 'license:verify',
 } as const;

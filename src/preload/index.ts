@@ -61,4 +61,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke(IPC_CHANNELS.SYNC_TEST, params),
 
   checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_CHECK),
+  verifyLicense: (key: string) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_VERIFY, key),
 });

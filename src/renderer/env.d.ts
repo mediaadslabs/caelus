@@ -159,6 +159,7 @@ interface ElectronAPI {
   syncTest: (params: { serverUrl: string; apiKey: string }) => Promise<{ success: boolean; error?: string }>;
 
   checkForUpdates: () => Promise<{ success: boolean; latestVersion?: string; downloadUrl?: string; releaseNotes?: string; publishedAt?: string; error?: string }>;
+  verifyLicense: (key: string) => Promise<{ valid: boolean; payload: { client: string; features: string[]; iat: string; exp: string } | null; error?: string }>;
 }
 
 interface Window {

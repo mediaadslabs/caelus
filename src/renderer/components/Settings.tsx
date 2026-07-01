@@ -140,21 +140,35 @@ export default function Settings({ onClose, db, onSave, onPwaLaunch, onPwaUninst
   const [premiumError, setPremiumError] = useState('');
   const [premiumActivated, setPremiumActivated] = useState(false);
 
-  const handleActivatePremium = useCallback(() => {
+  const handleActivatePremium = useCallback(async () => {
     setPremiumError('');
     setPremiumActivated(false);
     const key = premiumKey.trim();
-    if (key.length < 10) {
-      setPremiumError('Invalid license key format.');
+    if (!key) {
+      setPremiumError('Please enter a license key.');
       return;
     }
-    updateSetting('premium', {
-      enabled: true,
-      licenseKey: key,
-      activatedAt: new Date().toISOString(),
-    });
-    setPremiumActivated(true);
-    setPremiumKey('');
+    try {
+      const api = window.electronAPI;
+      if (!api) {
+        setPremiumError('License verification unavailable.');
+        return;
+      }
+      const result = await api.verifyLicense(key);
+      if (!result.valid) {
+        setPremiumError(result.error || 'Invalid license key.');
+        return;
+      }
+      updateSetting('premium', {
+        enabled: true,
+        licenseKey: key,
+        activatedAt: new Date().toISOString(),
+      });
+      setPremiumActivated(true);
+      setPremiumKey('');
+    } catch (e) {
+      setPremiumError('Verification failed. Please try again.');
+    }
   }, [premiumKey, updateSetting]);
 
   const handleDeactivatePremium = useCallback(() => {

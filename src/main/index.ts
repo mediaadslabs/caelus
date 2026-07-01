@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 import { saveSession, loadSession } from './session';
+import { decodeLicenseKey } from '../shared/license';
 import { loadDatabase, saveDatabase } from './database';
 import { setupDownloadHandler } from './downloads';
 import { resolveBangQuery } from './bangs';
@@ -241,6 +242,10 @@ ipcMain.handle(IPC_CHANNELS.SYNC_PULL, async (_event, { serverUrl, password, api
 
 ipcMain.handle(IPC_CHANNELS.SYNC_TEST, async (_event, { serverUrl, apiKey }: { serverUrl: string; apiKey: string }) => {
   return testConnection(serverUrl, apiKey);
+});
+
+ipcMain.handle(IPC_CHANNELS.LICENSE_VERIFY, (_event, licenseKey: string) => {
+  return decodeLicenseKey(licenseKey);
 });
 
 ipcMain.handle(IPC_CHANNELS.UPDATE_CHECK, async () => {
