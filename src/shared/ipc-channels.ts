@@ -44,4 +44,7 @@ export const IPC_CHANNELS = {
   UPDATE_CHECK: 'update:check',
   UPDATE_DOWNLOAD: 'update:download',
   LICENSE_VERIFY: 'license:verify',
+  WINDOW_ENTER_FULLSCREEN: 'window:enter-fullscreen',
+  WINDOW_LEAVE_FULLSCREEN: 'window:leave-fullscreen',
+  WINDOW_FULLSCREEN_STATE_CHANGED: 'window:fullscreen-state-changed',
 } as const;

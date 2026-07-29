@@ -62,4 +62,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_CHECK),
   verifyLicense: (key: string) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_VERIFY, key),
+
+  enterFullscreen: () => ipcRenderer.send(IPC_CHANNELS.WINDOW_ENTER_FULLSCREEN),
+  leaveFullscreen: () => ipcRenderer.send(IPC_CHANNELS.WINDOW_LEAVE_FULLSCREEN),
+  onFullscreenStateChanged: (callback: (isFullscreen: boolean) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.WINDOW_FULLSCREEN_STATE_CHANGED, (_event, isFullscreen) => callback(isFullscreen));
+  },
 });

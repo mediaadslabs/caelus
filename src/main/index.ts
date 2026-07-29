@@ -55,7 +55,19 @@ function createWindow(): void {
   setupAdBlocking(mainWindow.webContents.session);
 
   mainWindow.webContents.session.setPermissionRequestHandler((_webContents, permission, callback) => {
-    callback(false);
+    if (permission === 'fullscreen') {
+      callback(true);
+    } else {
+      callback(false);
+    }
+  });
+
+  (mainWindow as unknown as { on: (event: string, cb: () => void) => void }).on('enter-fullscreen', () => {
+    mainWindow?.webContents.send(IPC_CHANNELS.WINDOW_FULLSCREEN_STATE_CHANGED, true);
+  });
+
+  (mainWindow as unknown as { on: (event: string, cb: () => void) => void }).on('leave-fullscreen', () => {
+    mainWindow?.webContents.send(IPC_CHANNELS.WINDOW_FULLSCREEN_STATE_CHANGED, false);
   });
 
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -105,6 +117,14 @@ ipcMain.on(IPC_CHANNELS.WINDOW_MAXIMIZE, () => {
 
 ipcMain.on(IPC_CHANNELS.WINDOW_CLOSE, () => {
   mainWindow?.close();
+});
+
+ipcMain.on(IPC_CHANNELS.WINDOW_ENTER_FULLSCREEN, () => {
+  mainWindow?.setFullScreen(true);
+});
+
+ipcMain.on(IPC_CHANNELS.WINDOW_LEAVE_FULLSCREEN, () => {
+  mainWindow?.setFullScreen(false);
 });
 
 ipcMain.handle(IPC_CHANNELS.SESSION_LOAD, () => {

@@ -111,6 +111,7 @@ export default function WebViewTab({
     const wv = document.createElement('webview') as Electron.WebviewTag;
     wv.setAttribute('src', url || 'about:blank');
     wv.setAttribute('allowpopups', '');
+    wv.setAttribute('allowfullscreen', '');
     wv.setAttribute('webpreferences', 'contextIsolation=yes, nodeIntegration=no, webSecurity=no');
 
     wv.style.cssText = `
@@ -161,6 +162,14 @@ export default function WebViewTab({
       setCtxMenu({ x: e.params.x, y: e.params.y, visible: true });
     };
 
+    const onEnterHtmlFullScreen = () => {
+      window.electronAPI?.enterFullscreen();
+    };
+
+    const onLeaveHtmlFullScreen = () => {
+      window.electronAPI?.leaveFullscreen();
+    };
+
     wv.addEventListener('did-attach', onAttach);
     wv.addEventListener('did-navigate', onDidNavigate);
     wv.addEventListener('did-navigate-in-page', onDidNavigateInPage);
@@ -171,6 +180,8 @@ export default function WebViewTab({
     wv.addEventListener('update-target-url', onUpdateTargetUrl);
     wv.addEventListener('did-fail-load', onDidFailLoad);
     wv.addEventListener('context-menu', onContextMenuEvent);
+    wv.addEventListener('enter-html-full-screen', onEnterHtmlFullScreen);
+    wv.addEventListener('leave-html-full-screen', onLeaveHtmlFullScreen);
 
     return () => {
       wv.removeEventListener('did-attach', onAttach);
@@ -183,6 +194,8 @@ export default function WebViewTab({
       wv.removeEventListener('update-target-url', onUpdateTargetUrl);
       wv.removeEventListener('did-fail-load', onDidFailLoad);
       wv.removeEventListener('context-menu', onContextMenuEvent);
+      wv.removeEventListener('enter-html-full-screen', onEnterHtmlFullScreen);
+      wv.removeEventListener('leave-html-full-screen', onLeaveHtmlFullScreen);
 
       wv.remove();
       wvRef.current = null;

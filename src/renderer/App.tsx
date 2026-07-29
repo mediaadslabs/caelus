@@ -62,8 +62,11 @@ function BrowserContent() {
   const [contextAction, setContextAction] = useState<{ action: string; content: string } | null>(null);
   const [db, setDb] = useState<Database | null>(null);
   const [pwaDetectedApp, setPwaDetectedApp] = useState<{ name: string; description?: string; startUrl: string; icon?: string; display: string; manifestUrl: string } | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const omniboxRef = useRef<OmniboxHandle>(null);
   const activeTab = tabs.find((t) => t.active) || tabs[0];
+  const activeTabIdRef = useRef(activeTab?.id);
+  activeTabIdRef.current = activeTab?.id;
   const { mode, cycleMode } = useLayout();
 
   useEffect(() => {
@@ -74,6 +77,16 @@ function BrowserContent() {
       }
       setShowBookmarksBar(data.settings.showBookmarksBar);
       setBookmarks(data.bookmarks || []);
+    });
+    window.electronAPI?.onFullscreenStateChanged((fs) => {
+      setIsFullscreen(fs);
+      if (!fs) {
+        const id = activeTabIdRef.current;
+        if (id) {
+          const handle = getWebViewHandle(id);
+          handle?.executeJavaScript('document.exitFullscreen()').catch(() => {});
+        }
+      }
     });
   }, []);
 
@@ -404,17 +417,19 @@ function BrowserContent() {
   if (mode === 'vertical') {
     return (
       <div style={{ display: 'flex', height: '100vh' }}>
-        <VerticalTabs
-          tabs={tabs}
-          onSelect={selectTab}
-          onClose={closeTab}
-          onNewTab={newTab}
-          collapsed={verticalCollapsed}
-          onToggleCollapse={() => setVerticalCollapsed((v) => !v)}
-        />
+        {!isFullscreen && (
+          <VerticalTabs
+            tabs={tabs}
+            onSelect={selectTab}
+            onClose={closeTab}
+            onNewTab={newTab}
+            collapsed={verticalCollapsed}
+            onToggleCollapse={() => setVerticalCollapsed((v) => !v)}
+          />
+        )}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          {omniboxContent}
-          {bookmarksContent}
+          {!isFullscreen && omniboxContent}
+          {!isFullscreen && bookmarksContent}
           {renderWebviewArea()}
         </div>
       </div>
@@ -423,11 +438,13 @@ function BrowserContent() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <Titlebar>
-        <TabStrip tabs={tabs} onSelect={selectTab} onClose={closeTab} onNewTab={newTab} />
-      </Titlebar>
-      {omniboxContent}
-      {bookmarksContent}
+      {!isFullscreen && (
+        <Titlebar>
+          <TabStrip tabs={tabs} onSelect={selectTab} onClose={closeTab} onNewTab={newTab} />
+        </Titlebar>
+      )}
+      {!isFullscreen && omniboxContent}
+      {!isFullscreen && bookmarksContent}
       {renderWebviewArea()}
     </div>
   );

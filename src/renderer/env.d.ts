@@ -160,6 +160,10 @@ interface ElectronAPI {
 
   checkForUpdates: () => Promise<{ success: boolean; latestVersion?: string; downloadUrl?: string; releaseNotes?: string; publishedAt?: string; error?: string }>;
   verifyLicense: (key: string) => Promise<{ valid: boolean; payload: { client: string; features: string[]; iat: string; exp: string } | null; error?: string }>;
+
+  enterFullscreen: () => void;
+  leaveFullscreen: () => void;
+  onFullscreenStateChanged: (callback: (isFullscreen: boolean) => void) => void;
 }
 
 interface Window {
